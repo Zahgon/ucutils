@@ -23,18 +23,11 @@ class MemWriteTracker(ucutils.emu.Hook):
         self.original_pages = {}
 
     def hook(self, uc, optype, addr, size, value, data):
-        page_addr = ucutils.get_page_base(addr)
-        logger.debug("captured memory write: %x:%x@0x%x", value, size, addr)
-
-        if page_addr in self.original_pages:
-            return
-
-        self.original_pages[page_addr] = uc.mem_read(page_addr, PAGE_SIZE)
+        pass
 
 
 def restore_pages(emu, tracker):
-    for page_addr, page_buf in tracker.original_pages.items():
-        emu.mem_write(page_addr, bytes(page_buf))
+    pass
 
 
 @dataclass
@@ -59,19 +52,4 @@ def checkpoint(emu):
         assert emu.mem[0x0:0x4] == '\x00\x00\x00\x00'
         assert 0x0 in cp['written_pages']
     """
-
-    # we are a little clever with this dictionary.
-    # we'll yield it as the context manager block is entered, but it won't yet contain anything.
-    # since dictionaries are mutable, we can place results into it after the block exits.
-    ret = Checkpoint(written_pages={})
-    tracker = ucutils.checkpoint.MemWriteTracker()
-    try:
-        with ucutils.emu.context(emu):
-            with ucutils.emu.hook(emu, tracker):
-                yield ret
-
-    finally:
-        ret.written_pages = {
-            page_addr: bytes(emu.mem_read(page_addr, PAGE_SIZE)) for page_addr in tracker.original_pages.keys()
-        }
-        restore_pages(emu, tracker)
+    pass

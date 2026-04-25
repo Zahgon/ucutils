@@ -19,4 +19,4 @@ def bind(emu, plat):
     return an object that behaves like a `ucutils.plat.*` instance,
     and if a property is called, passes the given emulator as the first argument
     """
-    return Wrapper(emu, plat)
+    pass

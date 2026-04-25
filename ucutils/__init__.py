@@ -32,9 +32,7 @@ def align(value, alignment):
     Returns:
       int: the aligned value.
     """
-    if value % alignment == 0:
-        return value
-    return value + (alignment - (value % alignment))
+    pass
 
 
 def get_page_base(addr):
@@ -45,85 +43,64 @@ def get_page_base(addr):
 
         assert get_page_base(0x1002) == 0x1000
     """
-    return addr & 0b11111111111111111111000000000000
+    pass
 
 
 def mem_hexdump(emu, addr, size):
-    buf = emu.mem_read(addr, size)
-    return hex(addr) + ":\n" + hexdump.hexdump(buf, result="return")
+    pass
 
 
 def emit_uint16(emu, addr, value):
-    emu.mem_write(addr, struct.pack("<H", value))
+    pass
 
 
 def parse_uint16(emu, addr):
-    buf = emu.mem_read(addr, 0x2)
-    return struct.unpack("<H", buf)[0]
+    pass
 
 
 def emit_uint32(emu, addr, value):
-    emu.mem_write(addr, struct.pack("<I", value))
+    pass
 
 
 def parse_uint32(emu, addr):
-    buf = emu.mem_read(addr, 0x4)
-    return struct.unpack("<I", buf)[0]
+    pass
 
 
 def emit_uint64(emu, addr, value):
-    emu.mem_write(addr, struct.pack("<Q", value))
+    pass
 
 
 def parse_uint64(emu, addr):
-    buf = emu.mem_read(addr, 0x8)
-    return struct.unpack("<Q", buf)[0]
+    pass
 
 
 def parse_ascii(emu, addr, length=0x100):
-    return emu.mem_read(addr, length).partition(b"\x00")[0].decode("ascii")
+    pass
 
 
 def parse_utf16(emu, addr, length=0x100):
-    return emu.mem_read(addr, length).partition(b"\x00\x00")[0].decode("utf-16le")
+    pass
 
 
 def is_64(emu):
-    return emu._mode == unicorn.UC_MODE_64
+    pass
 
 
 def emit_ptr(emu, addr, value):
-    if is_64(emu):
-        return emit_uint64(emu, addr, value)
-    else:
-        return emit_uint32(emu, addr, value)
+    pass
 
 
 def parse_ptr(emu, addr):
-    if is_64(emu):
-        return parse_uint64(emu, addr)
-    else:
-        return parse_uint32(emu, addr)
+    pass
 
 
 def probe_addr(emu, addr):
-    try:
-        emu.mem_read(addr, 0x1)
-    except unicorn.UcError:
-        return False
-    else:
-        return True
+    pass
 
 
 def alloc_page(emu):
-    addr = HEAP_ADDR
-    while True:
-        if probe_addr(emu, addr):
-            addr += 0x1000
-            continue
-        emu.mem_map(addr, PAGE_SIZE)
-        return addr
+    pass
 
 
 def free_page(emu, addr):
-    emu.mem_free(addr, PAGE_SIZE)
+    pass

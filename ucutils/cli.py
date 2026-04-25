@@ -28,16 +28,7 @@ OPS = {
 
 
 def _eval_expr(node):
-    if isinstance(node, ast.Num):  # <number>
-        return node.n
-    elif isinstance(node, ast.BinOp):  # <left> <operator> <right>
-        # fully specifying the type here is just noise.
-        # the handler expects two args and returns a value.
-        return OPS[type(node.op)](_eval_expr(node.left), _eval_expr(node.right))  # type: ignore
-    elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., -1
-        return OPS[type(node.op)](_eval_expr(node.operand))  # type: ignore
-    else:
-        raise TypeError(node)
+    pass
 
 
 def eval_expr(expr):
@@ -60,7 +51,7 @@ def eval_expr(expr):
     Returns:
       number
     """
-    return _eval_expr(ast.parse(expr, mode="eval").body)
+    pass
 
 
 class RHook(ucutils.emu.Hook):
@@ -71,13 +62,7 @@ class RHook(ucutils.emu.Hook):
         self.target = target
 
     def hook(self, uc, read_type, address, size, value, user_data):
-        if read_type != unicorn.UC_MEM_READ:
-            return
-
-        if address == self.target:
-            logger.debug("rhook break at 0x%x", address)
-
-        return address != self.target
+        pass
 
 
 class WHook(ucutils.emu.Hook):
@@ -88,13 +73,7 @@ class WHook(ucutils.emu.Hook):
         self.target = target
 
     def hook(self, uc, write_type, address, size, value, user_data):
-        if write_type != unicorn.UC_MEM_WRITE:
-            return
-
-        if address == self.target:
-            logger.debug("whook break at 0x%x", address)
-
-        return address != self.target
+        pass
 
 
 class XHook(ucutils.emu.Hook):
@@ -105,13 +84,7 @@ class XHook(ucutils.emu.Hook):
         self.target = target
 
     def hook(self, uc, fetch_type, address, size, value, user_data):
-        if fetch_type != unicorn.UC_MEM_FETCH:
-            return
-
-        if address == self.target:
-            logger.debug("xhook break at 0x%x", address)
-
-        return address != self.target
+        pass
 
 
 class UnicornCli(cmd.Cmd):
@@ -226,40 +199,25 @@ class UnicornCli(cmd.Cmd):
 
     @property
     def prompt(self):
-        return "0x%08x> " % (self.emu.pc)
+        pass
 
     def do_exit(self, line):
-        return True
+        pass
 
     def do_quit(self, line):
-        return True
+        pass
 
     def do_q(self, line):
-        return True
+        pass
 
     def do_EOF(self, line):
-        return True
+        pass
 
     def do_reg(self, line):
-        if self.emu.is64:
-            for reg in self.X64GPREGS:
-                print("%s: 0x%08x" % (reg, getattr(self.emu, reg.lower())))
-        else:
-            for reg in self.X32GPREGS:
-                print("%s: 0x%08x" % (reg, getattr(self.emu, reg.lower())))
+        pass
 
     def parse_addr(self, line):
-        if not line:
-            return self.emu.rip
-        elif line.lower() in self.emu.arch.REGS:
-            return getattr(self.emu, line.lower())
-        elif "+" in line or "-" in line or "*" in line:
-            for reg in self.GPREGS:
-                line = line.replace(reg, hex(getattr(self.emu, reg.lower())))
-                line = line.replace(reg.lower(), hex(getattr(self.emu, reg.lower())))
-            return eval_expr(line)
-        else:
-            return int(line, 0x10)
+        pass
 
     def do_dc(self, line):
         """
@@ -287,46 +245,13 @@ class UnicornCli(cmd.Cmd):
             0x8000:
             00000000: BA 5A 82 7C 18 DB C5 D9  74 24 F4 5E 29 C9 B1 59  .Z.|....t$.^)..Y
         """
-        parts = shlex.split(line)
-
-        addr = self.emu.pc
-        if len(parts) > 0:
-            addr = self.parse_addr(parts[0])
-
-        size = 0x100
-        if len(parts) > 1:
-            size = int(parts[1], 0x10)
-
-        if len(parts) > 2:
-            print("error: invalid arguments. usage:")
-            print("")
-            print("    > dc [address=$pc [size=0x100]]")
-            return
-
-        try:
-            print(ucutils.mem_hexdump(self.emu, addr, size))
-        except unicorn.UcError:
-            print("invalid memory")
+        pass
 
     def do_dd(self, line):
-        addr = self.parse_addr(line)
-        for i in range(0x10):
-            try:
-                q = ucutils.parse_uint32(self.emu, addr + (i * 4))
-            except unicorn.UcError:
-                print("invalid memory")
-                break
-            print("0x%08x: 0x%x" % (addr + (i * 4), q))
+        pass
 
     def do_dq(self, line):
-        addr = self.parse_addr(line)
-        for i in range(0x10):
-            try:
-                q = ucutils.parse_uint64(self.emu, addr + (i * 8))
-            except unicorn.UcError:
-                print("invalid memory")
-                break
-            print("0x%08x: 0x%x" % (addr + (i * 8), q))
+        pass
 
     def do_u(self, line):
         """
@@ -352,44 +277,19 @@ class UnicornCli(cmd.Cmd):
             0x8000: mov     edx, 0x187c825a
             0x8005: fcmovnb st(0), st(5)
         """
-        count = 5
-        if not line:
-            addr = self.emu.pc
-        else:
-            addr_line, _, count_line = line.partition(" ")
-            addr = self.parse_addr(addr_line)
-            if count_line:
-                count = int(count_line, 0x10)
-
-        dis = self.emu.arch.get_capstone()
-        try:
-            buf = self.emu.mem[addr : addr + 0x10 * count]
-            for op in itertools.islice(dis.disasm(bytes(buf), addr), count):
-                print("0x%x:\t%s\t%s" % (op.address, op.mnemonic, op.op_str))
-        except unicorn.UcError:
-            print("invalid memory")
+        pass
 
     def do_t(self, line):
-        self.emu.stepi()
+        pass
 
     def do_g(self, line):
-        addr = self.parse_addr(line)
-        try:
-            self.emu.go(addr)
-        except unicorn.UcError as e:
-            print("error: %s" % (e))
+        pass
 
     def do_sym(self, line):
-        if line:
-            addr = self.parse_addr(line)
-            print("0x%08x: %s" % (addr, self.emu.symbols.get(addr, "????")))
-        else:
-            for addr, name in sorted(self.emu.symbols.items()):
-                print("0x%08x: %s" % (addr, name))
+        pass
 
     def do_maps(self, line):
-        for addr, name in sorted(self.emu.mem.symbols.items()):
-            print("0x%08x: %s" % (addr, name))
+        pass
 
     def do_writefile(self, line):
         """
@@ -404,22 +304,7 @@ class UnicornCli(cmd.Cmd):
             > writefile decoded.bin 0x8000 0x100
             wrote 0x200 bytes to decoded.bin
         """
-        parts = shlex.split(line)
-        if len(parts) != 3:
-            print("error: three arguments required:")
-            print("")
-            print("    > writefile filename address size")
-            return
-
-        filename = parts[0]
-        addr = self.parse_addr(parts[1])
-        size = int(parts[2], 0x10)
-
-        buf = self.emu.mem[addr : addr + size]
-        with open(filename, "wb") as f:
-            f.write(buf)
-
-        print("wrote %d bytes to %s" % (len(buf), filename))
+        pass
 
     def do_ba(self, line):
         """
@@ -439,19 +324,4 @@ class UnicornCli(cmd.Cmd):
         therefore, this command immediately begins emulation,
          and continues until the condition is met.
         """
-        parts = shlex.split(line)
-        if len(parts) != 2:
-            print("error: two arguments required:")
-            print("")
-            print("    > ba access address")
-            return
-
-        access = parts[0]
-        addr = self.parse_addr(parts[1])
-
-        if access not in "erw":
-            print("error: invalid access. one of e, r, or w is required.")
-            return
-
-        with ucutils.emu.hook(self.emu, {"r": RHook, "w": WHook, "x": XHook}[access](addr)):
-            self.emu.go(-1)
+        pass

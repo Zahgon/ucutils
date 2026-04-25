@@ -43,37 +43,16 @@ class MemoryAccessor:
     # TODO: __setitem__ to write to memory
 
     def _find_heap_range(self, size: int):
-        num_pages = ucutils.align(size, PAGE_SIZE) // PAGE_SIZE
-
-        addr = ucutils.HEAP_ADDR
-        while True:
-            is_valid = True
-            for i in range(num_pages):
-                if ucutils.probe_addr(self.emu, addr + i * PAGE_SIZE):
-                    is_valid = False
-                    break
-
-            if not is_valid:
-                addr += PAGE_SIZE
-                continue
-            else:
-                return addr
+        pass
 
     def alloc(self, size: int, reason=""):
-        addr = self._find_heap_range(size)
-        self.emu.mem_map(addr, ucutils.align(size, PAGE_SIZE))
-        self.symbols[addr] = reason
-        return addr
+        pass
 
     def map_data(self, addr: int, data: bytes, reason=""):
-        size = ucutils.align(len(data), PAGE_SIZE)
-        self.emu.mem_map(addr, size)
-        self.emu.mem_write(addr, data)
-        self.symbols[addr] = reason
+        pass
 
     def map_region(self, addr: int, size: int, reason=""):
-        self.emu.mem_map(addr, ucutils.align(size, PAGE_SIZE))
-        self.symbols[addr] = reason
+        pass
 
 
 @unicorn.ucsubclass
@@ -134,79 +113,32 @@ class Emulator(unicorn.Uc):
 
     @property
     def scratch(self):
-        if self._scratch is None:
-            self._scratch = self.mem.alloc(SCRATCH_SIZE, reason="scratch")
-            logger.debug("mapped scratch space at 0x%x", self._scratch)
-
-        return self._scratch
+        pass
 
     @property
     def dis(self):
-        if self._dis is None:
-            self._dis = self.arch.get_capstone()
-            assert self._dis is not None
-            self._dis.detail = True
-        return self._dis
+        pass
 
     def _handle_hook(self, hook_type, *args, **kwargs):
-        should_stop = False
-        for fn in self._hooks[hook_type]:
-            try:
-                fn(*args, **kwargs)
-            except Hook.Stop:
-                logger.debug("hook asking to stop: %s", fn)
-                should_stop = True
-
-        if should_stop:
-            logger.debug("stopping")
-            self.emu_stop()
-
-        # for memory events, this may not stop the emulator
-        # see: https://github.com/unicorn-engine/unicorn/blob/master/include/unicorn/unicorn.h#L267
-        # (return type of callback is void)
-        #
-        # therefore, we explicitly call `emu_stop()` above.
-        return should_stop
+        pass
 
     def hook_add(self, hook_type, fn):
-        hook_list = self._hooks[hook_type]
-        was_empty = len(hook_list) == 0
-        self._hooks[hook_type].append(fn)
-        if was_empty:
-            handler = functools.partial(self._handle_hook, hook_type)
-            handle = super().hook_add(hook_type, handler)
-            self._handles[hook_type] = handle
+        pass
 
     def hook_del(self, fn):
-        if isinstance(fn, int):
-            # TODO: handle better
-            raise ValueError("this is an Emulator, not unicorn.Uc!")
-
-        for hook_type, hook_list in self._hooks.items():
-            try:
-                hook_list.remove(fn)
-            except ValueError:
-                # it wasnt there
-                pass
-            else:
-                if not hook_list:
-                    super().hook_del(self._handles[hook_type])
-                    del self._handles[hook_type]
+        pass
 
     def go(self, addr):
-        self.arch.emu_go(self, addr)
+        pass
 
     def stepi(self):
-        self.arch.emu_stepi(self)
+        pass
 
     def push(self, val: int):
-        self.stack_pointer -= self.ptr_size
-        self.arch.emit_ptr(self, self.stack_pointer, val)
+        pass
 
     def pop(self) -> int:
-        r = self.arch.parse_ptr(self, self.stack_pointer)
-        self.stack_pointer += self.ptr_size
-        return r
+        pass
 
     def __getattr__(self, k):
         """
@@ -273,23 +205,15 @@ class Hook:
         raise NotImplementedError()
 
     def install(self, emu):
-        logger.debug("installing hook")
-        emu.hook_add(self.HOOK_TYPE, self.hook)
+        pass
 
     def uninstall(self, emu):
-        logger.debug("uninstalling hook")
-        # note: this doesn't work with vanilla `unicorn.Uc`.
-        # would have to remove the hook by type.
-        emu.hook_del(self.hook)
+        pass
 
 
 @contextlib.contextmanager
 def hook(emu, hook):
-    try:
-        hook.install(emu)
-        yield
-    finally:
-        hook.uninstall(emu)
+    pass
 
 
 class CodeLogger(Hook):
@@ -308,9 +232,7 @@ class CodeLogger(Hook):
         self.dis = dis
 
     def hook(self, uc, address, size, user_data):
-        buf = uc.mem_read(address, size)
-        op = next(self.dis.disasm(bytes(buf), address))
-        logger.debug("0x%x:\t%s\t%s" % (op.address, op.mnemonic, op.op_str))
+        pass
 
 
 class WriteLogger(Hook):
@@ -338,13 +260,7 @@ class WriteLogger(Hook):
     }
 
     def hook(self, uc, write_type, address, size, value, user_data):
-        logger.debug(
-            "%s: addr:0x%x size:0x%x value:0x%x",
-            self.MEM_TYPES[write_type],
-            address,
-            size,
-            value,
-        )
+        pass
 
 
 PAGE_MASK = 0xFFFFFFFFFFFFE000
@@ -364,8 +280,4 @@ def context(emu):
             assert emu.pc == 0x401000
         assert emu.pc == 0xAAAA
     """
-    try:
-        ctx = emu.context_save()
-        yield
-    finally:
-        emu.context_restore(ctx)
+    pass
